@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package accesstokenpb;
+option go_package = "grpc_client/protos/accesstokenpb";
+
+
+message StoreAccessTokenRequest {
+    int32 client_id = 1;
+    int32 user_id = 2;
+}
+
+message GetAccessTokenRequest {
+    string access_token = 3;
+}
+
+message UpdateAccessTokenRequest {
+    string access_token = 3;
+}
+
+message DeleteAccessTokenRequest {
+    string access_token = 3;
+}
+
+message AccessTokenResponse {
+    int32 client_id = 1;
+    int32 user_id = 2;
+    string access_token = 3;
+    string expired_at = 4;
+    string created_at = 5;
+}
+
+service AccessToken {
+    rpc Get    (stream GetAccessTokenRequest) returns (stream AccessTokenResponse);
+    rpc Store  (stream StoreAccessTokenRequest) returns (stream AccessTokenResponse);
+    rpc Delete (DeleteAccessTokenRequest) returns (AccessTokenResponse);
+    rpc Update (UpdateAccessTokenRequest) returns (AccessTokenResponse);
+}
