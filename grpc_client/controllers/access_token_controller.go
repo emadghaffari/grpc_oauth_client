@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"log"
 	"time"
@@ -15,8 +14,8 @@ import (
 
 
 var(
-	// AccessToken var
-	AccessToken accessTokenInterface = &accessToken{}
+	// ClientAccessToken var
+	ClientAccessToken accessTokenInterface = &accessToken{}
 	storeResponse *accesstokenpb.AccessTokenResponse
 	getResponse *accesstokenpb.AccessTokenResponse
 )
@@ -47,33 +46,35 @@ func (ac *accessToken)  Get(accessToken string) (*accesstokenpb.AccessTokenRespo
 	stream,err := c.Get(context.Background())
 	wiatc := make(chan struct{})
 	go func() {
-		fmt.Printf("sending request ... %v \n", req)
 		stream.Send(req)
-		time.Sleep(1000 * time.Millisecond)
 		stream.CloseSend()
 	}()
 
 	go func() {
-		res,err := stream.Recv()
-		if err == io.EOF{
-			close(wiatc)
-			return
+		for {
+			res,err := stream.Recv()
+			if err == io.EOF{
+				close(wiatc)
+				return
+			}
+			if err != nil {
+				log.Fatalln(err.Error())
+				close(wiatc)
+				return
+			}
+			if res != nil {
+				getResponse = res
+			}
 		}
-		if err != nil {
-			log.Fatalln(err.Error())
-			close(wiatc)
-			return
-		}
-		getResponse = res
 	}()                             
 
 	<-wiatc
 
-	if storeResponse == nil {
+	if getResponse == nil {
 		return nil, errors.HandlerInternalServerError("error in response section",nil)
 	}
 
-	return storeResponse, nil
+	return getResponse, nil
 }
 func (ac *accessToken)  Store(userID int32, clientID int32) (*accesstokenpb.AccessTokenResponse, error){
 	conn,err := app.StartApplication()
@@ -89,24 +90,27 @@ func (ac *accessToken)  Store(userID int32, clientID int32) (*accesstokenpb.Acce
 	stream,err := c.Store(context.Background())
 	wiatc := make(chan struct{})
 	go func() {
-		fmt.Printf("sending request ... %v \n", req)
 		stream.Send(req)
 		time.Sleep(1000 * time.Millisecond)
 		stream.CloseSend()
 	}()
 
 	go func() {
-		res,err := stream.Recv()
-		if err == io.EOF{
-			close(wiatc)
-			return
+		for {
+			res,err := stream.Recv()
+			if err == io.EOF{
+				close(wiatc)
+				return
+			}
+			if err != nil {
+				log.Fatalln(err.Error())
+				close(wiatc)
+				return
+			}
+			if res != nil {
+				storeResponse = res
+			}
 		}
-		if err != nil {
-			log.Fatalln(err.Error())
-			close(wiatc)
-			return
-		}
-		storeResponse = res
 	}()
 
 	<-wiatc

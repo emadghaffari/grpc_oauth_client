@@ -29,7 +29,7 @@ func StartApplication() (*grpc.ClientConn ,error){
 	// conn,err := grpc.Dial("localhost:50051", grpc.WithTransportCredentials(creds))
 	
 	
-	conn,err := grpc.Dial("localhost:50051", grpc.WithInsecure())
+	conn,err := grpc.Dial(":50051", grpc.WithInsecure())
 	
 	if err != nil {
 		return nil, errors.HandlerInternalServerError(fmt.Sprintf("Error in Dial to grpc server: %v", err),err)
