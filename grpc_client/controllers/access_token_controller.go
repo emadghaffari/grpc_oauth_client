@@ -3,9 +3,6 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"io"
-	"log"
-	"time"
 
 	"github.com/emadghaffari/grpc_oauth_client/grpc_client/app"
 	"github.com/emadghaffari/grpc_oauth_client/grpc_client/protos/accesstokenpb"
@@ -44,41 +41,11 @@ func (ac *accessToken)  Get(accessToken string) (*accesstokenpb.AccessTokenRespo
 		AccessToken: accessToken,
 	}
 	c :=  accesstokenpb.NewAccessTokenClient(conn)
-	stream,reserr := c.Get(context.Background())
+	res,reserr := c.Get(context.Background(),req)
 	if reserr != nil {
-		return nil, errors.HandlerInternalServerError(fmt.Sprintf("Error in Get from access_token service"),reserr)
+		return nil, errors.HandlerInternalServerError(fmt.Sprintf("Error in Get data with accessToken from Client service"),reserr)
 	}
-	wiatc := make(chan struct{})
-	go func() {
-		stream.Send(req)
-		stream.CloseSend()
-	}()
-
-	go func() {
-		for {
-			res,err := stream.Recv()
-			if err == io.EOF{
-				close(wiatc)
-				return
-			}
-			if err != nil {
-				log.Fatalln(err.Error())
-				close(wiatc)
-				return
-			}
-			if res != nil {
-				getResponse = res
-			}
-		}
-	}()                             
-
-	<-wiatc
-
-	if getResponse == nil {
-		return nil, errors.HandlerInternalServerError("error in response section",nil)
-	}
-
-	return getResponse, nil
+	return res, nil
 }
 func (ac *accessToken)  Store(userID int32, clientID int32) (*accesstokenpb.AccessTokenResponse, errors.ResError){
 	conn,err := app.StartApplication()
@@ -91,42 +58,11 @@ func (ac *accessToken)  Store(userID int32, clientID int32) (*accesstokenpb.Acce
 		UserId: userID,
 	}
 	c :=  accesstokenpb.NewAccessTokenClient(conn)
-	stream,reserr := c.Store(context.Background())
+	res,reserr := c.Store(context.Background(),req)
 	if reserr != nil {
-		return nil, errors.HandlerInternalServerError(fmt.Sprintf("Error in Store to access_token service"),reserr)
+		return nil, errors.HandlerInternalServerError(fmt.Sprintf("Error in Store accessToken from Client service"),reserr)
 	}
-	wiatc := make(chan struct{})
-	go func() {
-		stream.Send(req)
-		time.Sleep(1000 * time.Millisecond)
-		stream.CloseSend()
-	}()
-
-	go func() {
-		for {
-			res,err := stream.Recv()
-			if err == io.EOF{
-				close(wiatc)
-				return
-			}
-			if err != nil {
-				log.Fatalln(err.Error())
-				close(wiatc)
-				return
-			}
-			if res != nil {
-				storeResponse = res
-			}
-		}
-	}()
-
-	<-wiatc
-
-	if storeResponse == nil {
-		return nil, errors.HandlerInternalServerError("error in response section",nil)
-	}
-
-	return storeResponse, nil
+	return res, nil
 }
 
 // Delete method for Delete accessTokens

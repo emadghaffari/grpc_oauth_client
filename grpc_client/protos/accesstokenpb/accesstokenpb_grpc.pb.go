@@ -17,8 +17,8 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AccessTokenClient interface {
-	Get(ctx context.Context, opts ...grpc.CallOption) (AccessToken_GetClient, error)
-	Store(ctx context.Context, opts ...grpc.CallOption) (AccessToken_StoreClient, error)
+	Get(ctx context.Context, in *GetAccessTokenRequest, opts ...grpc.CallOption) (*AccessTokenResponse, error)
+	Store(ctx context.Context, in *StoreAccessTokenRequest, opts ...grpc.CallOption) (*AccessTokenResponse, error)
 	Delete(ctx context.Context, in *DeleteAccessTokenRequest, opts ...grpc.CallOption) (*AccessTokenResponse, error)
 	Update(ctx context.Context, in *UpdateAccessTokenRequest, opts ...grpc.CallOption) (*AccessTokenResponse, error)
 }
@@ -31,66 +31,22 @@ func NewAccessTokenClient(cc grpc.ClientConnInterface) AccessTokenClient {
 	return &accessTokenClient{cc}
 }
 
-func (c *accessTokenClient) Get(ctx context.Context, opts ...grpc.CallOption) (AccessToken_GetClient, error) {
-	stream, err := c.cc.NewStream(ctx, &_AccessToken_serviceDesc.Streams[0], "/accesstokenpb.AccessToken/Get", opts...)
+func (c *accessTokenClient) Get(ctx context.Context, in *GetAccessTokenRequest, opts ...grpc.CallOption) (*AccessTokenResponse, error) {
+	out := new(AccessTokenResponse)
+	err := c.cc.Invoke(ctx, "/accesstokenpb.AccessToken/Get", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &accessTokenGetClient{stream}
-	return x, nil
+	return out, nil
 }
 
-type AccessToken_GetClient interface {
-	Send(*GetAccessTokenRequest) error
-	Recv() (*AccessTokenResponse, error)
-	grpc.ClientStream
-}
-
-type accessTokenGetClient struct {
-	grpc.ClientStream
-}
-
-func (x *accessTokenGetClient) Send(m *GetAccessTokenRequest) error {
-	return x.ClientStream.SendMsg(m)
-}
-
-func (x *accessTokenGetClient) Recv() (*AccessTokenResponse, error) {
-	m := new(AccessTokenResponse)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
-func (c *accessTokenClient) Store(ctx context.Context, opts ...grpc.CallOption) (AccessToken_StoreClient, error) {
-	stream, err := c.cc.NewStream(ctx, &_AccessToken_serviceDesc.Streams[1], "/accesstokenpb.AccessToken/Store", opts...)
+func (c *accessTokenClient) Store(ctx context.Context, in *StoreAccessTokenRequest, opts ...grpc.CallOption) (*AccessTokenResponse, error) {
+	out := new(AccessTokenResponse)
+	err := c.cc.Invoke(ctx, "/accesstokenpb.AccessToken/Store", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &accessTokenStoreClient{stream}
-	return x, nil
-}
-
-type AccessToken_StoreClient interface {
-	Send(*StoreAccessTokenRequest) error
-	Recv() (*AccessTokenResponse, error)
-	grpc.ClientStream
-}
-
-type accessTokenStoreClient struct {
-	grpc.ClientStream
-}
-
-func (x *accessTokenStoreClient) Send(m *StoreAccessTokenRequest) error {
-	return x.ClientStream.SendMsg(m)
-}
-
-func (x *accessTokenStoreClient) Recv() (*AccessTokenResponse, error) {
-	m := new(AccessTokenResponse)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
+	return out, nil
 }
 
 func (c *accessTokenClient) Delete(ctx context.Context, in *DeleteAccessTokenRequest, opts ...grpc.CallOption) (*AccessTokenResponse, error) {
@@ -115,22 +71,21 @@ func (c *accessTokenClient) Update(ctx context.Context, in *UpdateAccessTokenReq
 // All implementations must embed UnimplementedAccessTokenServer
 // for forward compatibility
 type AccessTokenServer interface {
-	Get(AccessToken_GetServer) error
-	Store(AccessToken_StoreServer) error
+	Get(context.Context, *GetAccessTokenRequest) (*AccessTokenResponse, error)
+	Store(context.Context, *StoreAccessTokenRequest) (*AccessTokenResponse, error)
 	Delete(context.Context, *DeleteAccessTokenRequest) (*AccessTokenResponse, error)
 	Update(context.Context, *UpdateAccessTokenRequest) (*AccessTokenResponse, error)
-	mustEmbedUnimplementedAccessTokenServer()
 }
 
 // UnimplementedAccessTokenServer must be embedded to have forward compatible implementations.
 type UnimplementedAccessTokenServer struct {
 }
 
-func (UnimplementedAccessTokenServer) Get(AccessToken_GetServer) error {
-	return status.Errorf(codes.Unimplemented, "method Get not implemented")
+func (UnimplementedAccessTokenServer) Get(context.Context, *GetAccessTokenRequest) (*AccessTokenResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
 }
-func (UnimplementedAccessTokenServer) Store(AccessToken_StoreServer) error {
-	return status.Errorf(codes.Unimplemented, "method Store not implemented")
+func (UnimplementedAccessTokenServer) Store(context.Context, *StoreAccessTokenRequest) (*AccessTokenResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Store not implemented")
 }
 func (UnimplementedAccessTokenServer) Delete(context.Context, *DeleteAccessTokenRequest) (*AccessTokenResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
@@ -151,56 +106,40 @@ func RegisterAccessTokenServer(s *grpc.Server, srv AccessTokenServer) {
 	s.RegisterService(&_AccessToken_serviceDesc, srv)
 }
 
-func _AccessToken_Get_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(AccessTokenServer).Get(&accessTokenGetServer{stream})
-}
-
-type AccessToken_GetServer interface {
-	Send(*AccessTokenResponse) error
-	Recv() (*GetAccessTokenRequest, error)
-	grpc.ServerStream
-}
-
-type accessTokenGetServer struct {
-	grpc.ServerStream
-}
-
-func (x *accessTokenGetServer) Send(m *AccessTokenResponse) error {
-	return x.ServerStream.SendMsg(m)
-}
-
-func (x *accessTokenGetServer) Recv() (*GetAccessTokenRequest, error) {
-	m := new(GetAccessTokenRequest)
-	if err := x.ServerStream.RecvMsg(m); err != nil {
+func _AccessToken_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAccessTokenRequest)
+	if err := dec(in); err != nil {
 		return nil, err
 	}
-	return m, nil
+	if interceptor == nil {
+		return srv.(AccessTokenServer).Get(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/accesstokenpb.AccessToken/Get",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AccessTokenServer).Get(ctx, req.(*GetAccessTokenRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
-func _AccessToken_Store_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(AccessTokenServer).Store(&accessTokenStoreServer{stream})
-}
-
-type AccessToken_StoreServer interface {
-	Send(*AccessTokenResponse) error
-	Recv() (*StoreAccessTokenRequest, error)
-	grpc.ServerStream
-}
-
-type accessTokenStoreServer struct {
-	grpc.ServerStream
-}
-
-func (x *accessTokenStoreServer) Send(m *AccessTokenResponse) error {
-	return x.ServerStream.SendMsg(m)
-}
-
-func (x *accessTokenStoreServer) Recv() (*StoreAccessTokenRequest, error) {
-	m := new(StoreAccessTokenRequest)
-	if err := x.ServerStream.RecvMsg(m); err != nil {
+func _AccessToken_Store_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(StoreAccessTokenRequest)
+	if err := dec(in); err != nil {
 		return nil, err
 	}
-	return m, nil
+	if interceptor == nil {
+		return srv.(AccessTokenServer).Store(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/accesstokenpb.AccessToken/Store",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AccessTokenServer).Store(ctx, req.(*StoreAccessTokenRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _AccessToken_Delete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -244,6 +183,14 @@ var _AccessToken_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*AccessTokenServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
+			MethodName: "Get",
+			Handler:    _AccessToken_Get_Handler,
+		},
+		{
+			MethodName: "Store",
+			Handler:    _AccessToken_Store_Handler,
+		},
+		{
 			MethodName: "Delete",
 			Handler:    _AccessToken_Delete_Handler,
 		},
@@ -252,19 +199,6 @@ var _AccessToken_serviceDesc = grpc.ServiceDesc{
 			Handler:    _AccessToken_Update_Handler,
 		},
 	},
-	Streams: []grpc.StreamDesc{
-		{
-			StreamName:    "Get",
-			Handler:       _AccessToken_Get_Handler,
-			ServerStreams: true,
-			ClientStreams: true,
-		},
-		{
-			StreamName:    "Store",
-			Handler:       _AccessToken_Store_Handler,
-			ServerStreams: true,
-			ClientStreams: true,
-		},
-	},
+	Streams:  []grpc.StreamDesc{},
 	Metadata: "grpc_client/protos/accesstokenpb/accesstokenpb.proto",
 }

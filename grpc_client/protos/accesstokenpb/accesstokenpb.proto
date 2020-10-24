@@ -30,8 +30,8 @@ message AccessTokenResponse {
 }
 
 service AccessToken {
-    rpc Get    (stream GetAccessTokenRequest) returns (stream AccessTokenResponse);
-    rpc Store  (stream StoreAccessTokenRequest) returns (stream AccessTokenResponse);
+    rpc Get    (GetAccessTokenRequest) returns (AccessTokenResponse);
+    rpc Store  (StoreAccessTokenRequest) returns (AccessTokenResponse);
     rpc Delete (DeleteAccessTokenRequest) returns (AccessTokenResponse);
     rpc Update (UpdateAccessTokenRequest) returns (AccessTokenResponse);
 }
