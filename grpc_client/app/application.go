@@ -16,7 +16,7 @@ const(
 
 // StartApplication func
 // starter for application
-func StartApplication() (*grpc.ClientConn ,error){
+func StartApplication() (*grpc.ClientConn ,errors.ResError){
 	// if go code crashed...
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	

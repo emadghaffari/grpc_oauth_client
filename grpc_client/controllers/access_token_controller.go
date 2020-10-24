@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"log"
 	"time"
@@ -24,16 +25,16 @@ var(
 // accessTokenInterface interface
 // the interface for accessTokens in dao
 type accessTokenInterface interface{
-	Get(string) (*accesstokenpb.AccessTokenResponse, error)
-	Store(int32,int32) (*accesstokenpb.AccessTokenResponse, error)
-	Delete(string) (*accesstokenpb.AccessTokenResponse, error)
-	Update(string) (*accesstokenpb.AccessTokenResponse, error)
+	Get(string) (*accesstokenpb.AccessTokenResponse, errors.ResError)
+	Store(int32,int32) (*accesstokenpb.AccessTokenResponse, errors.ResError)
+	Delete(string) (*accesstokenpb.AccessTokenResponse, errors.ResError)
+	Update(string) (*accesstokenpb.AccessTokenResponse, errors.ResError)
 }
 
 // accessToken struct implement all methods in interface
 type accessToken struct{}
 
-func (ac *accessToken)  Get(accessToken string) (*accesstokenpb.AccessTokenResponse, error){
+func (ac *accessToken)  Get(accessToken string) (*accesstokenpb.AccessTokenResponse, errors.ResError){
 	conn,err := app.StartApplication()
 	if err != nil {
 		return nil,err
@@ -43,7 +44,10 @@ func (ac *accessToken)  Get(accessToken string) (*accesstokenpb.AccessTokenRespo
 		AccessToken: accessToken,
 	}
 	c :=  accesstokenpb.NewAccessTokenClient(conn)
-	stream,err := c.Get(context.Background())
+	stream,reserr := c.Get(context.Background())
+	if reserr != nil {
+		return nil, errors.HandlerInternalServerError(fmt.Sprintf("Error in Get from access_token service"),reserr)
+	}
 	wiatc := make(chan struct{})
 	go func() {
 		stream.Send(req)
@@ -76,7 +80,7 @@ func (ac *accessToken)  Get(accessToken string) (*accesstokenpb.AccessTokenRespo
 
 	return getResponse, nil
 }
-func (ac *accessToken)  Store(userID int32, clientID int32) (*accesstokenpb.AccessTokenResponse, error){
+func (ac *accessToken)  Store(userID int32, clientID int32) (*accesstokenpb.AccessTokenResponse, errors.ResError){
 	conn,err := app.StartApplication()
 	if err != nil {
 		return nil,err
@@ -87,7 +91,10 @@ func (ac *accessToken)  Store(userID int32, clientID int32) (*accesstokenpb.Acce
 		UserId: userID,
 	}
 	c :=  accesstokenpb.NewAccessTokenClient(conn)
-	stream,err := c.Store(context.Background())
+	stream,reserr := c.Store(context.Background())
+	if reserr != nil {
+		return nil, errors.HandlerInternalServerError(fmt.Sprintf("Error in Store to access_token service"),reserr)
+	}
 	wiatc := make(chan struct{})
 	go func() {
 		stream.Send(req)
@@ -123,7 +130,7 @@ func (ac *accessToken)  Store(userID int32, clientID int32) (*accesstokenpb.Acce
 }
 
 // Delete method for Delete accessTokens
-func (ac *accessToken)  Delete(accessToken string) (*accesstokenpb.AccessTokenResponse, error){
+func (ac *accessToken)  Delete(accessToken string) (*accesstokenpb.AccessTokenResponse, errors.ResError){
 	conn,err := app.StartApplication()
 	if err != nil {
 		return nil,err
@@ -134,16 +141,15 @@ func (ac *accessToken)  Delete(accessToken string) (*accesstokenpb.AccessTokenRe
 		AccessToken: accessToken,
 	}
 
-	res,err := c.Delete(context.Background(),req)
-
-	if err != nil {
-		return nil , errors.HandlerInternalServerError("Error in Delete accessToken from Client service",err) 
+	res,reserr := c.Delete(context.Background(),req)
+	if reserr != nil {
+		return nil, errors.HandlerInternalServerError(fmt.Sprintf("Error in Delete accessToken from Client service"),reserr)
 	}
 	return res, nil
 }
 
 // Update method for update accessTokens
-func (ac *accessToken)  Update(accessToken string) (*accesstokenpb.AccessTokenResponse, error){
+func (ac *accessToken)  Update(accessToken string) (*accesstokenpb.AccessTokenResponse, errors.ResError){
 	conn,err := app.StartApplication()
 	if err != nil {
 		return nil,err
@@ -154,10 +160,10 @@ func (ac *accessToken)  Update(accessToken string) (*accesstokenpb.AccessTokenRe
 		AccessToken: accessToken,
 	}
 
-	res,err := c.Update(context.Background(),req)
+	res,reserr := c.Update(context.Background(),req)
 
-	if err != nil {
-		return nil , errors.HandlerInternalServerError("Error in Delete accessToken from Client service",err) 
+	if reserr != nil {
+		return nil , errors.HandlerInternalServerError("Error in Delete accessToken from Client service",reserr) 
 	}
 	return res, nil
 }
